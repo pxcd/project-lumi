@@ -6,15 +6,43 @@ import shutil
 import time
 from pathlib import Path
 
+import mlx.core as mx
 import numpy as np
 
+from lumi.artifacts import fingerprint_files, verify_fingerprints
 from lumi.dataset import LumiDataset
 from lumi.model import LumiConfig, LumiModel
 from lumi.train import LumiTrainer
 
 
-def save_checkpoint(trainer, dataset, directory):
-    """Save model, optimizer, and dataset RNG states."""
+CHECKPOINT_FILES = (
+    "model.safetensors",
+    "optimizer.safetensors",
+    "metadata.json",
+    "rng.json",
+    "training_state.json",
+)
+
+
+def build_trainer(seed, learning_rate=3e-4, config=None):
+    """Build a deterministically initialized Lumi trainer."""
+    mx.random.seed(seed)
+    config = config or LumiConfig(
+        vocab_size=8192,
+        context_length=512,
+        n_layers=8,
+        d_model=512,
+        n_heads=8,
+        d_ff=2048,
+    )
+    return LumiTrainer(
+        LumiModel(config),
+        learning_rate=learning_rate,
+    )
+
+
+def save_checkpoint(trainer, dataset, directory, training_state):
+    """Atomically save a fingerprinted training checkpoint."""
     directory = Path(directory)
     temporary = directory.with_name(directory.name + ".tmp")
 
@@ -30,6 +58,24 @@ def save_checkpoint(trainer, dataset, directory):
 
     (temporary / "rng.json").write_text(
         json.dumps(rng_state, indent=2),
+        encoding="utf-8",
+    )
+
+    (temporary / "training_state.json").write_text(
+        json.dumps(training_state, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    manifest = {
+        "format_version": 1,
+        "checkpoint_artifacts": fingerprint_files(
+            temporary,
+            CHECKPOINT_FILES,
+        ),
+        "dataset_artifacts": dataset.artifact_fingerprints(),
+    }
+    (temporary / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 
@@ -53,10 +99,29 @@ def save_checkpoint(trainer, dataset, directory):
 
 
 def load_checkpoint(directory, dataset):
-    """Restore trainer and dataset RNG states."""
+    """Restore a checkpoint only when all fingerprints still match."""
     directory = Path(directory)
 
+    manifest = json.loads(
+        (directory / "manifest.json").read_text(encoding="utf-8")
+    )
+    verify_fingerprints(
+        directory,
+        manifest["checkpoint_artifacts"],
+    )
+
+    current_dataset_artifacts = dataset.artifact_fingerprints()
+
+    if current_dataset_artifacts != manifest["dataset_artifacts"]:
+        raise ValueError("Checkpoint dataset fingerprints do not match")
+
     trainer = LumiTrainer.load_checkpoint(directory)
+
+    if trainer.model.config.vocab_size != dataset.vocab_size:
+        raise ValueError("Checkpoint vocabulary does not match dataset")
+
+    if trainer.model.config.context_length != dataset.context_length:
+        raise ValueError("Checkpoint context length does not match dataset")
 
     rng_state = json.loads(
         (directory / "rng.json").read_text(encoding="utf-8")
@@ -65,16 +130,19 @@ def load_checkpoint(directory, dataset):
     dataset.train_rng.bit_generator.state = rng_state["train"]
     dataset.val_rng.bit_generator.state = rng_state["val"]
 
-    return trainer
+    training_state = json.loads(
+        (directory / "training_state.json").read_text(encoding="utf-8")
+    )
+
+    return trainer, training_state
 
 
 def evaluate(trainer, dataset, batch_size, batches):
-    """Calculate mean validation loss."""
-    losses = []
-
-    for _ in range(batches):
-        batch = dataset.get_batch("val", batch_size)
-        losses.append(trainer.evaluate(batch))
+    """Calculate mean loss on fixed validation windows."""
+    losses = [
+        trainer.evaluate(batch)
+        for batch in dataset.fixed_validation_batches(batch_size, batches)
+    ]
 
     return float(np.mean(losses))
 
@@ -94,12 +162,12 @@ def main():
 
     parser.add_argument(
         "--data-dir",
-        default="data/prepared/tinystories",
+        default="data/prepared/tinystories-v1.1",
     )
 
     parser.add_argument(
         "--checkpoint-dir",
-        default="checkpoints/lumi-pretrain",
+        default="checkpoints/lumi-v1.1",
     )
 
     args = parser.parse_args()
@@ -117,29 +185,43 @@ def main():
         context_length=512,
         seed=args.seed,
     )
-    dataset.load_prepared()
+    dataset.load_prepared(require_eos=True)
 
-    checkpoint_dir = Path(args.checkpoint_dir)
+    checkpoint_root = Path(args.checkpoint_dir)
+    latest_checkpoint = checkpoint_root / "latest"
+    best_checkpoint = checkpoint_root / "best"
+    run_config = {
+        "steps": args.steps,
+        "batch_size": args.batch_size,
+        "learning_rate": args.learning_rate,
+        "log_every": args.log_every,
+        "eval_every": args.eval_every,
+        "eval_batches": args.eval_batches,
+        "save_every": args.save_every,
+        "seed": args.seed,
+    }
 
     if args.resume:
-        trainer = load_checkpoint(checkpoint_dir, dataset)
+        trainer, training_state = load_checkpoint(
+            latest_checkpoint,
+            dataset,
+        )
+
+        if training_state["seed"] != args.seed:
+            raise ValueError("Checkpoint seed does not match --seed")
+
+        if training_state["run_config"] != run_config:
+            raise ValueError("Checkpoint training configuration mismatch")
+
         print(f"Resumed at step {trainer.step}", flush=True)
     else:
-        config = LumiConfig(
-            vocab_size=8192,
-            context_length=512,
-            n_layers=8,
-            d_model=512,
-            n_heads=8,
-            d_ff=2048,
-        )
-
-        model = LumiModel(config)
-
-        trainer = LumiTrainer(
-            model,
-            learning_rate=args.learning_rate,
-        )
+        trainer = build_trainer(args.seed, args.learning_rate)
+        training_state = {
+            "seed": args.seed,
+            "best_validation_loss": None,
+            "last_validation_loss": None,
+            "run_config": run_config,
+        }
 
     if trainer.step >= args.steps:
         print("Target step already reached.")
@@ -179,18 +261,48 @@ def main():
                     f"step={step} val_loss={val_loss:.4f}",
                     flush=True,
                 )
+                training_state["last_validation_loss"] = val_loss
+                best_loss = training_state["best_validation_loss"]
+
+                if best_loss is None or val_loss < best_loss:
+                    training_state["best_validation_loss"] = val_loss
+                    save_checkpoint(
+                        trainer,
+                        dataset,
+                        best_checkpoint,
+                        training_state,
+                    )
+                    print(
+                        f"Best checkpoint saved: step {step}",
+                        flush=True,
+                    )
 
             if step % args.save_every == 0:
-                save_checkpoint(trainer, dataset, checkpoint_dir)
+                save_checkpoint(
+                    trainer,
+                    dataset,
+                    latest_checkpoint,
+                    training_state,
+                )
                 print(f"Checkpoint saved: step {step}", flush=True)
 
     except KeyboardInterrupt:
         print("\nInterrupted. Saving checkpoint...", flush=True)
-        save_checkpoint(trainer, dataset, checkpoint_dir)
+        save_checkpoint(
+            trainer,
+            dataset,
+            latest_checkpoint,
+            training_state,
+        )
         print(f"Saved at step {trainer.step}", flush=True)
         return
 
-    save_checkpoint(trainer, dataset, checkpoint_dir)
+    save_checkpoint(
+        trainer,
+        dataset,
+        latest_checkpoint,
+        training_state,
+    )
 
     elapsed = time.perf_counter() - start
 

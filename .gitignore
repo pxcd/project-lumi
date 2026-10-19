@@ -12,3 +12,6 @@ __pycache__/
 # Lumi release binaries (distributed separately from Git)
 releases/**/*.safetensors
 releases/*.tar.gz
+
+# Reproducible LM Studio conversion output
+/experiments/lmstudio-compat/converted/
