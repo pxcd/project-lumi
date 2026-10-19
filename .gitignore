@@ -8,3 +8,7 @@ __pycache__/
 # Training data and model artifacts
 /data/
 /checkpoints/
+
+# Lumi release binaries (distributed separately from Git)
+releases/**/*.safetensors
+releases/*.tar.gz

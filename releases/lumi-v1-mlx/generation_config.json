@@ -1,0 +1,5 @@
+{
+  "temperature": 1.0,
+  "max_new_tokens": 200,
+  "seed": 42
+}
