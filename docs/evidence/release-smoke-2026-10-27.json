@@ -1,0 +1,19 @@
+{
+  "checked_on": "2026-10-27",
+  "source": "extracted public release archive",
+  "environment": "existing project Python 3.12 environment; no clean dependency install",
+  "runtime_versions": {
+    "mlx": "0.32.4",
+    "mlx-metal": "0.32.4",
+    "tokenizers": "0.23.3"
+  },
+  "settings": {
+    "prompt": "Once upon a time, there was a little girl named Lily.",
+    "max_tokens": 200,
+    "temperature": 1.0,
+    "seed": 42
+  },
+  "exit_code": 0,
+  "matches_preserved_v1_output": true,
+  "output": "Once upon a time, there was a little girl named Lily. She loved to wander around her desert near the cabin. One day, she saw a big raft and wanted to go down it. But, she was scared to go towards the raft.\nShe looked up at the raft and said, \"Don't worry, little birdie. I'll go too slowly and try this fast way! Just permit me to go instead!\"\nThen, she got up and started walking away, crying. Her mom came to the rescue and told her, \"Lily, you need to go back inside to examine the raft slowly. Your raft is big and heavy and it is very dangerous. There might be safer places to be safe so we go inside the raft.\" \nLily and her mom slowly agreed to let go. They walked to the raft and found a new raft. Suddenly, she realized that it was big enough to climb it and figure out again. The raft turned around and Lily was still awe. She looked around and saw a man standing next to her."
+}

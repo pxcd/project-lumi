@@ -1,0 +1,35 @@
+{
+  "checked_on": "2026-10-27",
+  "finish_reasons": {
+    "v1.0.0": {
+      "length": 36
+    },
+    "v1.1": {
+      "eos": 30,
+      "length": 6
+    }
+  },
+  "historical_source_commit": "4f6d8f7",
+  "sampling_seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "saved_generation_records": 72,
+  "sha256": {
+    "docs/evidence/first-words-v1.1.txt": "54942426898a98d800bfc5ec630dfb87ee8ded5f03e2d1e53a93f4e858068e26",
+    "docs/evidence/first-words-v1.txt": "4195318fd9a5874bd7c495c6bfac16022c493b3ad7328a3d3230e4d58c6f19e1",
+    "experiments/v1-vs-v1.1/evaluate.py": "ee9e01557add150ee42ff0a7021021cb2fddfafc29ed72c395b61773896d2e74",
+    "experiments/v1-vs-v1.1/results/generations.jsonl": "4156af8bb29b62f289efd809c8c879366cd9573007e778277234f281f9a2a3fe",
+    "releases/lumi-v1-mlx/config.json": "cbaa6438b47e792474fcce3f4f78874f02d14fefd2b0f6b05809afee56c4b3ed",
+    "releases/lumi-v1-mlx/inference.py": "ebba4b16730c1c6503a658abfb934c50f66722f94786083be68efeff624bed15",
+    "releases/lumi-v1-mlx/model.py": "df6e6d39c1928fb14ce7d3fc62310e20bcee463d0b81d773ca523952f1c1776e",
+    "releases/lumi-v1-mlx/model.safetensors": "c0c362b46daaea6617ab6c402df9deb2678d66211f93d039af50f2f2b36cc993",
+    "releases/lumi-v1-mlx/tokenizer.json": "0013fc26f45aa71b613351aa315ebf7e629456049a344025de8a9188259e2bf1",
+    "releases/lumi-v1.0-mlx.tar.gz": "d263ec3c071f901665e207a52c8ed1fab4bee182cfcbfe890b03e0f593cb8cbd"
+  },
+  "v1_parameter_count": 29398016,
+  "v1_weight_dtype": "F32"
+}

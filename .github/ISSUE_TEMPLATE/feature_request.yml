@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose a concrete improvement to Lumi.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What would this help you do?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest useful change and how you would verify it.
+    validations:
+      required: true
+  - type: input
+    id: wishlist
+    attributes:
+      label: Related wishlist entry or issue
+      placeholder: LUMI-003 or an issue link, if applicable

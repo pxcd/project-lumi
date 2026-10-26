@@ -1,0 +1,26 @@
+PROJECT LUMI — FIRST WORDS
+==========================
+
+{
+  "timestamp_utc": "2026-10-19T15:29:38.592713+00:00",
+  "model": "Project Lumi v1.1",
+  "parameters": 29398016,
+  "checkpoint": "checkpoints/lumi-v1.1/best",
+  "training_step": 11000,
+  "prompt": "Once upon a time, there was a little girl named Lily.",
+  "temperature": 1.0,
+  "seed": 42,
+  "max_new_tokens": 200,
+  "eos_token": "<|endofstory|>",
+  "eos_token_id": 0,
+  "generated_tokens": 170,
+  "finish_reason": "eos"
+}
+
+GENERATED TEXT
+==============
+
+Once upon a time, there was a little girl named Lily. She loved to sing and dance around the room. One day, she saw a man dancing in a funny light. He said, "Thank you, Lily! Do you want to play with me?"
+Lily nodded and ran to play, but she didn't need to tell the man. He felt lonely and angry back. Lily didn't understand why the man was so rude and friend meant so much about him. Then she realized that he didn't have a memory for her to feel better.
+The man thanked her for permitting him to play, and Lily went home. The man belonged to a little girl who had a leak in his toy box that was too high in front of her room. Lily was so happy that she forgot all about his pain and went home to have a regular clean shade of her own.
+The end.

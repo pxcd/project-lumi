@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible problem running or developing Lumi.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Lumi version or commit
+      placeholder: v1.0.0 release, or a source commit
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Mac model/chip, macOS, Python, MLX, and inference runtime versions.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include the exact command, prompt, seed, and matching model/tokenizer version where relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Model-quality limitations are documented in the model card; include a concrete example if reporting a regression.
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Error or diagnostic output
+      description: Remove API keys, credentials, and private conversation data before submitting.
+      render: text
