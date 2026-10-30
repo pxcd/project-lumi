@@ -15,3 +15,8 @@ releases/*.tar.gz
 
 # Reproducible LM Studio conversion output
 /experiments/lmstudio-compat/converted/
+
+# Local OpenCode task state and sibling-task scratch
+/.opencode/evidence/
+/.opencode/orchestration/
+/.worktrees/
