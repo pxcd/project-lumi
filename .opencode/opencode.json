@@ -1,0 +1,68 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    ".opencode/WORKFLOW.md"
+  ],
+  "experimental": {
+    "subagent_depth": 1
+  },
+  "default_agent": "Arbiter",
+  "compaction": {
+    "auto": true,
+    "keep": {
+      "tokens": 12000
+    },
+    "buffer": 16000
+  },
+  "tool_output": {
+    "max_lines": 200,
+    "max_bytes": 12000
+  },
+  "permissions": [
+    {
+      "action": "external_directory",
+      "resource": "*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "git push*",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "git reset*",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "git clean*",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "osascript *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "open *",
+      "effect": "deny"
+    }
+  ],
+  "plugins": [
+    "./plugins/step-limit-compat",
+    "./plugins/moe-thinking-control"
+  ],
+  "agents": {
+    "compaction": {
+      "model": "openai/gpt-6.1-sol"
+    },
+    "title": {
+      "model": "lmstudio/qwen3.6-35b-a3b-mlx"
+    },
+    "summary": {
+      "model": "openai/gpt-6.1-sol"
+    }
+  }
+}
